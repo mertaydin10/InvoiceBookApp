@@ -11,6 +11,8 @@ public enum InvoiceStatus
 public class Invoice
 {
     public long Id { get; set; }
+    public long UserId { get; set; }
+    public User User { get; set; } = null!;
     public long ClientId { get; set; }
     public Client Client { get; set; } = null!;
     public string Number { get; set; } = "";

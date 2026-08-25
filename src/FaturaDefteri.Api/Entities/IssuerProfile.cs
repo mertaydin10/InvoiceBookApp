@@ -3,6 +3,8 @@ namespace FaturaDefteri.Api.Entities;
 public class IssuerProfile
 {
     public long Id { get; set; }
+    public long UserId { get; set; }
+    public User User { get; set; } = null!;
     public string TradeName { get; set; } = "";
     public string? TaxOffice { get; set; }
     public string? TaxNumber { get; set; }
