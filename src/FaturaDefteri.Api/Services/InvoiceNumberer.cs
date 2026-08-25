@@ -5,11 +5,11 @@ namespace FaturaDefteri.Api.Services;
 
 public class InvoiceNumberer(FaturaDbContext db)
 {
-    public async Task<string> NextAsync(int year, CancellationToken ct)
+    public async Task<string> NextAsync(long userId, int year, CancellationToken ct)
     {
         var prefix = $"FAT-{year}-";
         var last = await db.Invoices
-            .Where(i => i.Number.StartsWith(prefix))
+            .Where(i => i.UserId == userId && i.Number.StartsWith(prefix))
             .Select(i => i.Number)
             .ToListAsync(ct);
 
