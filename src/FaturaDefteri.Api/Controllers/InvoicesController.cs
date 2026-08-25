@@ -1,7 +1,9 @@
+using FaturaDefteri.Api.Auth;
 using FaturaDefteri.Api.Data;
 using FaturaDefteri.Api.Dtos;
 using FaturaDefteri.Api.Entities;
 using FaturaDefteri.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,8 +11,11 @@ namespace FaturaDefteri.Api.Controllers;
 
 [ApiController]
 [Route("api/invoices")]
+[Authorize]
 public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : ControllerBase
 {
+    private long UserId => User.GetRequiredUserId();
+
     [HttpGet]
     public async Task<ActionResult<List<InvoiceListItem>>> List(
         [FromQuery] string? status,
@@ -18,7 +23,8 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
         CancellationToken ct)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var query = db.Invoices.AsNoTracking().Include(i => i.Client).Include(i => i.Lines).AsQueryable();
+        var query = db.Invoices.AsNoTracking().Include(i => i.Client).Include(i => i.Lines)
+            .Where(i => i.UserId == UserId);
         if (clientId is not null)
             query = query.Where(i => i.ClientId == clientId);
         if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<InvoiceStatus>(status, true, out var parsed))
@@ -37,7 +43,7 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
         var row = await db.Invoices.AsNoTracking()
             .Include(i => i.Client)
             .Include(i => i.Lines)
-            .FirstOrDefaultAsync(i => i.Id == id, ct);
+            .FirstOrDefaultAsync(i => i.Id == id && i.UserId == UserId, ct);
         return row is null ? NotFound() : Ok(MapDetail(row, DateOnly.FromDateTime(DateTime.UtcNow)));
     }
 
@@ -48,7 +54,7 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
         if (error is not null)
             return BadRequest(new { error });
 
-        var client = await db.Clients.FirstOrDefaultAsync(c => c.Id == request.ClientId, ct);
+        var client = await db.Clients.FirstOrDefaultAsync(c => c.Id == request.ClientId && c.UserId == UserId, ct);
         if (client is null)
             return BadRequest(new { error = "Müşteri bulunamadı." });
         if (request.DueDate < request.IssueDate)
@@ -56,8 +62,9 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
 
         var invoice = new Invoice
         {
+            UserId = UserId,
             ClientId = client.Id,
-            Number = await numbers.NextAsync(request.IssueDate.Year, ct),
+            Number = await numbers.NextAsync(UserId, request.IssueDate.Year, ct),
             IssueDate = request.IssueDate,
             DueDate = request.DueDate,
             Status = InvoiceStatus.Draft,
@@ -74,7 +81,8 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
     [HttpPut("{id:long}")]
     public async Task<ActionResult<InvoiceDetail>> Update(long id, UpdateInvoiceRequest request, CancellationToken ct)
     {
-        var invoice = await db.Invoices.Include(i => i.Lines).Include(i => i.Client).FirstOrDefaultAsync(i => i.Id == id, ct);
+        var invoice = await db.Invoices.Include(i => i.Lines).Include(i => i.Client)
+            .FirstOrDefaultAsync(i => i.Id == id && i.UserId == UserId, ct);
         if (invoice is null)
             return NotFound();
         if (invoice.Status is InvoiceStatus.Paid or InvoiceStatus.Cancelled)
@@ -84,7 +92,7 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
         if (error is not null)
             return BadRequest(new { error });
 
-        var client = await db.Clients.FirstOrDefaultAsync(c => c.Id == request.ClientId, ct);
+        var client = await db.Clients.FirstOrDefaultAsync(c => c.Id == request.ClientId && c.UserId == UserId, ct);
         if (client is null)
             return BadRequest(new { error = "Müşteri bulunamadı." });
         if (request.DueDate < request.IssueDate)
@@ -146,7 +154,7 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(long id, CancellationToken ct)
     {
-        var invoice = await db.Invoices.FirstOrDefaultAsync(i => i.Id == id, ct);
+        var invoice = await db.Invoices.FirstOrDefaultAsync(i => i.Id == id && i.UserId == UserId, ct);
         if (invoice is null)
             return NotFound();
         if (invoice.Status != InvoiceStatus.Draft)
@@ -157,7 +165,8 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
     }
 
     private Task<Invoice?> Load(long id, CancellationToken ct) =>
-        db.Invoices.Include(i => i.Client).Include(i => i.Lines).FirstOrDefaultAsync(i => i.Id == id, ct);
+        db.Invoices.Include(i => i.Client).Include(i => i.Lines)
+            .FirstOrDefaultAsync(i => i.Id == id && i.UserId == UserId, ct);
 
     private static string? ValidateLines(List<InvoiceLineRequest>? lines)
     {
