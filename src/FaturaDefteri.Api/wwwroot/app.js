@@ -11,18 +11,47 @@ const badgeClass = (s, overdue) => {
   return { Draft: "draft", Sent: "sent", Paid: "paid", Cancelled: "draft" }[s] || "";
 };
 
+const tokenKey = "faturaDefteriToken";
 let currency = "TRY";
 let editingId = null;
 
+function token() {
+  return localStorage.getItem(tokenKey);
+}
+
 async function api(path, opts = {}) {
-  const res = await fetch(path, {
-    headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
-    ...opts,
-  });
+  const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  const t = token();
+  if (t) headers.Authorization = `Bearer ${t}`;
+  const res = await fetch(path, { ...opts, headers });
   if (res.status === 204) return null;
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.error || res.statusText);
+  if (!res.ok) {
+    const err = new Error(body.error || res.statusText);
+    err.status = res.status;
+    throw err;
+  }
   return body;
+}
+
+function showApp(loggedIn) {
+  document.getElementById("auth-screen").classList.toggle("hidden", loggedIn);
+  document.getElementById("app").classList.toggle("hidden", !loggedIn);
+}
+
+function logout() {
+  localStorage.removeItem(tokenKey);
+  showApp(false);
+}
+
+async function fillCurrencySelect(selected = "TRY") {
+  const sel = document.getElementById("issuer-currency");
+  const list = await api("/api/currencies");
+  sel.innerHTML = list
+    .map((c) => `<option value="${c.code}">${c.name} (${c.symbol})</option>`)
+    .join("");
+  sel.value = selected;
+  if (!sel.value) sel.value = "TRY";
 }
 
 function toast(msg) {
@@ -188,6 +217,7 @@ document.getElementById("client-form").addEventListener("submit", async (e) => {
 async function loadIssuer() {
   const i = await api("/api/issuer");
   const f = document.getElementById("issuer-form");
+  await fillCurrencySelect(i.currency || "TRY");
   f.tradeName.value = i.tradeName || "";
   f.taxOffice.value = i.taxOffice || "";
   f.taxNumber.value = i.taxNumber || "";
@@ -425,4 +455,53 @@ document.getElementById("btn-print").addEventListener("click", async () => {
   w.print();
 });
 
-loadDashboard().catch((err) => toast(err.message));
+async function enterApp() {
+  showApp(true);
+  await loadDashboard();
+}
+
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById("auth-error");
+  errEl.textContent = "";
+  const f = e.target;
+  try {
+    const data = await api("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email: f.email.value, password: f.password.value }),
+    });
+    localStorage.setItem(tokenKey, data.token);
+    await enterApp();
+  } catch (err) {
+    errEl.textContent = err.message;
+  }
+});
+
+document.getElementById("register-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById("auth-error");
+  errEl.textContent = "";
+  const f = e.target;
+  try {
+    const data = await api("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        email: f.email.value,
+        password: f.password.value,
+        displayName: f.displayName.value || null,
+      }),
+    });
+    localStorage.setItem(tokenKey, data.token);
+    await enterApp();
+  } catch (err) {
+    errEl.textContent = err.message;
+  }
+});
+
+document.getElementById("btn-logout").addEventListener("click", logout);
+
+if (token()) enterApp().catch((err) => {
+  toast(err.message);
+  if (err.status === 401) logout();
+});
+else showApp(false);
