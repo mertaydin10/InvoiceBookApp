@@ -1,6 +1,9 @@
+using FaturaDefteri.Api.Auth;
 using FaturaDefteri.Api.Data;
 using FaturaDefteri.Api.Dtos;
 using FaturaDefteri.Api.Entities;
+using FaturaDefteri.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,12 +11,15 @@ namespace FaturaDefteri.Api.Controllers;
 
 [ApiController]
 [Route("api/issuer")]
+[Authorize]
 public class IssuerController(FaturaDbContext db) : ControllerBase
 {
+    private long UserId => User.GetRequiredUserId();
+
     [HttpGet]
     public async Task<ActionResult<IssuerResponse>> Get(CancellationToken ct)
     {
-        var row = await db.IssuerProfiles.OrderBy(x => x.Id).FirstOrDefaultAsync(ct);
+        var row = await db.IssuerProfiles.FirstOrDefaultAsync(x => x.UserId == UserId, ct);
         if (row is null)
             return Ok(new IssuerResponse(0, "", null, null, null, null, null, null, "TRY"));
         return Ok(Map(row));
@@ -24,11 +30,13 @@ public class IssuerController(FaturaDbContext db) : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(request.TradeName))
             return BadRequest(new { error = "Unvan gerekli." });
+        if (!Currencies.IsSupported(request.Currency))
+            return BadRequest(new { error = "Para birimi listeden seçilmeli." });
 
-        var row = await db.IssuerProfiles.OrderBy(x => x.Id).FirstOrDefaultAsync(ct);
+        var row = await db.IssuerProfiles.FirstOrDefaultAsync(x => x.UserId == UserId, ct);
         if (row is null)
         {
-            row = new IssuerProfile();
+            row = new IssuerProfile { UserId = UserId };
             db.IssuerProfiles.Add(row);
         }
 
@@ -39,7 +47,7 @@ public class IssuerController(FaturaDbContext db) : ControllerBase
         row.Email = EmptyToNull(request.Email);
         row.Phone = EmptyToNull(request.Phone);
         row.Iban = EmptyToNull(request.Iban);
-        row.Currency = string.IsNullOrWhiteSpace(request.Currency) ? "TRY" : request.Currency.Trim().ToUpperInvariant();
+        row.Currency = Currencies.Normalize(request.Currency);
         await db.SaveChangesAsync(ct);
         return Ok(Map(row));
     }
