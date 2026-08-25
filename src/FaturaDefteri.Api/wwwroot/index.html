@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FaturaDefteri</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>FaturaDefteri</h1>
+      <p class="muted">Müşteri, fatura ve tahsilat — yerelde SQLite</p>
+    </div>
+    <nav>
+      <button type="button" data-view="dashboard" class="nav on">Özet</button>
+      <button type="button" data-view="invoices">Faturalar</button>
+      <button type="button" data-view="clients">Müşteriler</button>
+      <button type="button" data-view="issuer">Firma</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="view-dashboard" class="view">
+      <div class="cards" id="summary-cards"></div>
+      <h2>Son faturalar</h2>
+      <div id="recent-invoices" class="table-wrap"></div>
+    </section>
+
+    <section id="view-invoices" class="view hidden">
+      <div class="row-between">
+        <h2>Faturalar</h2>
+        <button type="button" class="primary" id="btn-new-invoice">Yeni fatura</button>
+      </div>
+      <div class="filters">
+        <select id="filter-status">
+          <option value="">Tümü</option>
+          <option value="Draft">Taslak</option>
+          <option value="Sent">Gönderildi</option>
+          <option value="overdue">Gecikmiş</option>
+          <option value="Paid">Ödendi</option>
+          <option value="Cancelled">İptal</option>
+        </select>
+        <select id="filter-client"></select>
+      </div>
+      <div id="invoice-table" class="table-wrap"></div>
+    </section>
+
+    <section id="view-clients" class="view hidden">
+      <div class="row-between">
+        <h2>Müşteriler</h2>
+        <button type="button" class="primary" id="btn-new-client">Yeni müşteri</button>
+      </div>
+      <div id="client-table" class="table-wrap"></div>
+    </section>
+
+    <section id="view-issuer" class="view hidden">
+      <h2>Firma bilgileri</h2>
+      <p class="muted">Yazdırılan faturanın üstünde görünür.</p>
+      <form id="issuer-form" class="form">
+        <label>Unvan <input name="tradeName" required /></label>
+        <label>Vergi dairesi <input name="taxOffice" /></label>
+        <label>VKN / TCKN <input name="taxNumber" /></label>
+        <label>E-posta <input name="email" type="email" /></label>
+        <label>Telefon <input name="phone" /></label>
+        <label>IBAN <input name="iban" /></label>
+        <label>Para birimi <input name="currency" maxlength="8" placeholder="TRY" /></label>
+        <label class="full">Adres <textarea name="address" rows="3"></textarea></label>
+        <button type="submit" class="primary">Kaydet</button>
+      </form>
+    </section>
+
+    <section id="view-editor" class="view hidden">
+      <div class="row-between">
+        <h2 id="editor-title">Yeni fatura</h2>
+        <button type="button" id="btn-back-invoices">Listeye dön</button>
+      </div>
+      <form id="invoice-form" class="form">
+        <label>Müşteri
+          <select name="clientId" id="editor-client" required></select>
+        </label>
+        <label>Fatura tarihi <input name="issueDate" type="date" required /></label>
+        <label>Vade <input name="dueDate" type="date" required /></label>
+        <label class="full">Not <textarea name="notes" rows="2"></textarea></label>
+        <div class="full">
+          <div class="row-between">
+            <h3>Kalemler</h3>
+            <button type="button" id="btn-add-line">Kalem ekle</button>
+          </div>
+          <div id="lines"></div>
+        </div>
+        <div class="totals" id="editor-totals"></div>
+        <div class="actions">
+          <button type="submit" class="primary">Kaydet</button>
+          <button type="button" id="btn-send" class="hidden">Gönderildi işaretle</button>
+          <button type="button" id="btn-pay" class="hidden">Ödendi</button>
+          <button type="button" id="btn-print" class="hidden">Yazdır</button>
+          <button type="button" id="btn-cancel-inv" class="danger hidden">İptal</button>
+          <button type="button" id="btn-delete-inv" class="danger hidden">Sil</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <dialog id="client-dialog">
+    <form id="client-form" class="form">
+      <h3 id="client-dialog-title">Müşteri</h3>
+      <input type="hidden" name="id" />
+      <label>Ad <input name="name" required /></label>
+      <label>Vergi no <input name="taxNumber" /></label>
+      <label>E-posta <input name="email" type="email" /></label>
+      <label>Telefon <input name="phone" /></label>
+      <label class="full">Adres <textarea name="address" rows="2"></textarea></label>
+      <div class="actions">
+        <button type="submit" class="primary">Kaydet</button>
+        <button type="button" id="btn-client-close">Vazgeç</button>
+      </div>
+    </form>
+  </dialog>
+
+  <p id="toast" class="toast hidden"></p>
+  <script src="/app.js"></script>
+</body>
+</html>
