@@ -1,5 +1,6 @@
 using FaturaDefteri.Api.Data;
 using FaturaDefteri.Api.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +8,7 @@ namespace FaturaDefteri.Api.Controllers;
 
 [ApiController]
 [Route("health")]
+[AllowAnonymous]
 public class HealthController(FaturaDbContext db) : ControllerBase
 {
     [HttpGet]
