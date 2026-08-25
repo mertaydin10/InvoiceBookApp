@@ -1,7 +1,9 @@
+using FaturaDefteri.Api.Auth;
 using FaturaDefteri.Api.Data;
 using FaturaDefteri.Api.Dtos;
 using FaturaDefteri.Api.Entities;
 using FaturaDefteri.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,18 +11,21 @@ namespace FaturaDefteri.Api.Controllers;
 
 [ApiController]
 [Route("api/stats")]
+[Authorize]
 public class StatsController(FaturaDbContext db) : ControllerBase
 {
+    private long UserId => User.GetRequiredUserId();
+
     [HttpGet("summary")]
     public async Task<ActionResult<SummaryResponse>> Summary(CancellationToken ct)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var monthStart = new DateOnly(today.Year, today.Month, 1);
-        var issuer = await db.IssuerProfiles.AsNoTracking().OrderBy(x => x.Id).FirstOrDefaultAsync(ct);
+        var issuer = await db.IssuerProfiles.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == UserId, ct);
         var currency = issuer?.Currency ?? "TRY";
 
-        var invoices = await db.Invoices.AsNoTracking().Include(i => i.Lines).ToListAsync(ct);
-        var clients = await db.Clients.CountAsync(ct);
+        var invoices = await db.Invoices.AsNoTracking().Include(i => i.Lines).Where(i => i.UserId == UserId).ToListAsync(ct);
+        var clients = await db.Clients.CountAsync(c => c.UserId == UserId, ct);
 
         var open = invoices.Where(i => i.Status == InvoiceStatus.Sent).ToList();
         var overdue = open.Where(i => i.DueDate < today).ToList();
