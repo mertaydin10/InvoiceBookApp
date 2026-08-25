@@ -7,16 +7,39 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
+  <section id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <h1>FaturaDefteri</h1>
+      <p class="muted">Müşteri, fatura ve tahsilat</p>
+      <p id="auth-error" class="auth-error"></p>
+      <h2>Giriş</h2>
+      <form id="login-form" class="form auth-form" action="/api/auth/login" method="post">
+        <label class="full">E-posta <input name="email" type="email" required /></label>
+        <label class="full">Şifre <input name="password" type="password" minlength="4" required /></label>
+        <button type="submit" class="primary full">Giriş yap</button>
+      </form>
+      <h2>Kayıt ol</h2>
+      <form id="register-form" class="form auth-form" action="/api/auth/register" method="post">
+        <label class="full">E-posta <input name="email" type="email" required /></label>
+        <label class="full">Şifre <input name="password" type="password" minlength="4" required /></label>
+        <label class="full">Ad <input name="displayName" maxlength="200" /></label>
+        <button type="submit" class="primary full">Kayıt ol</button>
+      </form>
+    </div>
+  </section>
+
+  <div id="app" class="hidden">
   <header class="top">
     <div>
       <h1>FaturaDefteri</h1>
-      <p class="muted">Müşteri, fatura ve tahsilat — yerelde SQLite</p>
+      <p class="muted">Müşteri, fatura ve tahsilat</p>
     </div>
     <nav>
       <button type="button" data-view="dashboard" class="nav on">Özet</button>
       <button type="button" data-view="invoices">Faturalar</button>
       <button type="button" data-view="clients">Müşteriler</button>
       <button type="button" data-view="issuer">Firma</button>
+      <button type="button" id="btn-logout">Çıkış</button>
     </nav>
   </header>
 
@@ -64,7 +87,9 @@
         <label>E-posta <input name="email" type="email" /></label>
         <label>Telefon <input name="phone" /></label>
         <label>IBAN <input name="iban" /></label>
-        <label>Para birimi <input name="currency" maxlength="8" placeholder="TRY" /></label>
+        <label>Para birimi
+          <select name="currency" id="issuer-currency" required></select>
+        </label>
         <label class="full">Adres <textarea name="address" rows="3"></textarea></label>
         <button type="submit" class="primary">Kaydet</button>
       </form>
@@ -101,6 +126,7 @@
       </form>
     </section>
   </main>
+  </div>
 
   <dialog id="client-dialog">
     <form id="client-form" class="form">
@@ -119,6 +145,6 @@
   </dialog>
 
   <p id="toast" class="toast hidden"></p>
-  <script src="/app.js"></script>
+  <script src="/app.js?v=2"></script>
 </body>
 </html>
