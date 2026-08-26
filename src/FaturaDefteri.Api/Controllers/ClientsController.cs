@@ -22,6 +22,46 @@ public class ClientsController(FaturaDbContext db) : ControllerBase
         return Ok(rows.Select(Map).ToList());
     }
 
+    [HttpGet("with-balances")]
+    public async Task<ActionResult<List<ClientBalanceResponse>>> ListWithBalances(CancellationToken ct)
+    {
+        var clients = await db.Clients.AsNoTracking()
+            .Where(c => c.UserId == UserId)
+            .OrderBy(c => c.Name)
+            .ToListAsync(ct);
+
+        var invoices = await db.Invoices.AsNoTracking()
+            .Include(i => i.Lines)
+            .Where(i => i.UserId == UserId && i.Status != InvoiceStatus.Cancelled)
+            .ToListAsync(ct);
+
+        var result = clients.Select(c =>
+        {
+            var clientInvoices = invoices.Where(i => i.ClientId == c.Id).ToList();
+            var totalInvoiced = clientInvoices.Sum(i => Services.Money.Totals(i.Lines).Gross);
+            var totalPaid = clientInvoices.Where(i => i.Status == InvoiceStatus.Paid)
+                .Sum(i => Services.Money.Totals(i.Lines).Gross);
+            var outstanding = clientInvoices.Where(i => i.Status == InvoiceStatus.Sent)
+                .Sum(i => Services.Money.Totals(i.Lines).Gross);
+            var overdueCount = clientInvoices.Count(i => 
+                i.Status == InvoiceStatus.Sent && i.DueDate < DateOnly.FromDateTime(DateTime.UtcNow));
+
+            return new ClientBalanceResponse(
+                c.Id,
+                c.Name,
+                c.TaxNumber,
+                c.Email,
+                c.Phone,
+                totalInvoiced,
+                totalPaid,
+                outstanding,
+                overdueCount
+            );
+        }).ToList();
+
+        return Ok(result);
+    }
+
     [HttpGet("{id:long}")]
     public async Task<ActionResult<ClientResponse>> Get(long id, CancellationToken ct)
     {

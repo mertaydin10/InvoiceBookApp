@@ -37,6 +37,17 @@ public record ClientResponse(
     string? Address,
     DateTime CreatedAtUtc);
 
+public record ClientBalanceResponse(
+    long Id,
+    string Name,
+    string? TaxNumber,
+    string? Email,
+    string? Phone,
+    decimal TotalInvoiced,
+    decimal TotalPaid,
+    decimal Outstanding,
+    int OverdueCount);
+
 public record InvoiceLineRequest(string Description, decimal Quantity, decimal UnitPrice, decimal VatRate);
 
 public record InvoiceLineResponse(

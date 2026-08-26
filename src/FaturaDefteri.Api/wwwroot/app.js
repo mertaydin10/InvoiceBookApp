@@ -212,26 +212,57 @@ document.body.addEventListener("click", (e) => {
   openInvoice(Number(a.dataset.open));
 });
 
+let showBalances = false;
+
 async function loadClients() {
-  const list = await api("/api/clients");
-  const rows = list
-    .map(
-      (c) => `<tr>
-      <td>${c.name}</td>
-      <td>${c.taxNumber || "—"}</td>
-      <td>${c.email || "—"}</td>
-      <td>${c.phone || "—"}</td>
-      <td>
-        <button type="button" data-edit-client='${JSON.stringify(c)}'>Düzenle</button>
-        <button type="button" class="danger" data-del-client="${c.id}">Sil</button>
-      </td>
-    </tr>`
-    )
-    .join("");
-  document.getElementById("client-table").innerHTML = list.length
-    ? table(["Ad", "Vergi no", "E-posta", "Telefon", ""], rows)
-    : "<p class='muted'>Müşteri yok.</p>";
+  const endpoint = showBalances ? "/api/clients/with-balances" : "/api/clients";
+  const list = await api(endpoint);
+  
+  if (showBalances) {
+    const rows = list
+      .map(
+        (c) => `<tr>
+        <td>${c.name}</td>
+        <td>${c.taxNumber || "—"}</td>
+        <td class="right">${money(c.totalInvoiced, currency)}</td>
+        <td class="right">${money(c.totalPaid, currency)}</td>
+        <td class="right ${c.outstanding > 0 ? 'text-warn' : ''}">${money(c.outstanding, currency)}</td>
+        <td class="center">${c.overdueCount > 0 ? `<span class="badge overdue">${c.overdueCount}</span>` : "—"}</td>
+        <td>
+          <button type="button" data-edit-client='${JSON.stringify({ id: c.id, name: c.name, taxNumber: c.taxNumber, email: c.email, phone: c.phone })}'>Düzenle</button>
+        </td>
+      </tr>`
+      )
+      .join("");
+    document.getElementById("client-table").innerHTML = list.length
+      ? table(["Ad", "Vergi no", "Toplam", "Ödenen", "Açık", "Gecikmiş", ""], rows)
+      : "<p class='muted'>Müşteri yok.</p>";
+  } else {
+    const rows = list
+      .map(
+        (c) => `<tr>
+        <td>${c.name}</td>
+        <td>${c.taxNumber || "—"}</td>
+        <td>${c.email || "—"}</td>
+        <td>${c.phone || "—"}</td>
+        <td>
+          <button type="button" data-edit-client='${JSON.stringify(c)}'>Düzenle</button>
+          <button type="button" class="danger" data-del-client="${c.id}">Sil</button>
+        </td>
+      </tr>`
+      )
+      .join("");
+    document.getElementById("client-table").innerHTML = list.length
+      ? table(["Ad", "Vergi no", "E-posta", "Telefon", ""], rows)
+      : "<p class='muted'>Müşteri yok.</p>";
+  }
 }
+
+document.getElementById("btn-toggle-balance").addEventListener("click", () => {
+  showBalances = !showBalances;
+  document.getElementById("btn-toggle-balance").textContent = showBalances ? "Basit görünüm" : "Bakiyeler";
+  loadClients();
+});
 
 document.getElementById("client-table").addEventListener("click", async (e) => {
   const edit = e.target.closest("[data-edit-client]");
