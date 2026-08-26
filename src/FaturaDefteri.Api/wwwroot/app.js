@@ -35,8 +35,21 @@ async function api(path, opts = {}) {
 }
 
 function showApp(loggedIn) {
-  document.getElementById("auth-screen").classList.toggle("hidden", loggedIn);
+  document.getElementById("login-screen").classList.toggle("hidden", loggedIn);
+  document.getElementById("register-screen").classList.add("hidden");
   document.getElementById("app").classList.toggle("hidden", !loggedIn);
+}
+
+function showLoginScreen() {
+  document.getElementById("login-screen").classList.remove("hidden");
+  document.getElementById("register-screen").classList.add("hidden");
+  document.getElementById("app").classList.add("hidden");
+}
+
+function showRegisterScreen() {
+  document.getElementById("login-screen").classList.add("hidden");
+  document.getElementById("register-screen").classList.remove("hidden");
+  document.getElementById("app").classList.add("hidden");
 }
 
 function logout() {
@@ -565,9 +578,19 @@ async function enterApp() {
   await loadDashboard();
 }
 
+document.getElementById("link-to-register").addEventListener("click", (e) => {
+  e.preventDefault();
+  showRegisterScreen();
+});
+
+document.getElementById("link-to-login").addEventListener("click", (e) => {
+  e.preventDefault();
+  showLoginScreen();
+});
+
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const errEl = document.getElementById("auth-error");
+  const errEl = document.getElementById("login-error");
   errEl.textContent = "";
   const f = e.target;
   try {
@@ -584,9 +607,15 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
 
 document.getElementById("register-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const errEl = document.getElementById("auth-error");
+  const errEl = document.getElementById("register-error");
   errEl.textContent = "";
   const f = e.target;
+  
+  if (f.password.value !== f.confirmPassword.value) {
+    errEl.textContent = "Şifreler eşleşmiyor.";
+    return;
+  }
+  
   try {
     const data = await api("/api/auth/register", {
       method: "POST",

@@ -7,24 +7,35 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <section id="auth-screen" class="auth-screen">
+  <section id="login-screen" class="auth-screen">
     <div class="auth-card">
       <h1>FaturaDefteri</h1>
       <p class="muted">Müşteri, fatura ve tahsilat</p>
-      <p id="auth-error" class="auth-error"></p>
-      <h2>Giriş</h2>
+      <p id="login-error" class="auth-error"></p>
+      <h2>Giriş yap</h2>
       <form id="login-form" class="form auth-form" action="/api/auth/login" method="post">
         <label class="full">E-posta <input name="email" type="email" required /></label>
         <label class="full">Şifre <input name="password" type="password" minlength="4" required /></label>
         <button type="submit" class="primary full">Giriş yap</button>
       </form>
+      <p class="auth-link">Hesabınız yok mu? <a href="#" id="link-to-register">Kayıt olun</a></p>
+    </div>
+  </section>
+
+  <section id="register-screen" class="auth-screen hidden">
+    <div class="auth-card">
+      <h1>FaturaDefteri</h1>
+      <p class="muted">Müşteri, fatura ve tahsilat</p>
+      <p id="register-error" class="auth-error"></p>
       <h2>Kayıt ol</h2>
       <form id="register-form" class="form auth-form" action="/api/auth/register" method="post">
         <label class="full">E-posta <input name="email" type="email" required /></label>
         <label class="full">Şifre <input name="password" type="password" minlength="4" required /></label>
-        <label class="full">Ad <input name="displayName" maxlength="200" /></label>
+        <label class="full">Şifre (tekrar) <input name="confirmPassword" type="password" minlength="4" required /></label>
+        <label class="full">Ad <input name="displayName" maxlength="200" required /></label>
         <button type="submit" class="primary full">Kayıt ol</button>
       </form>
+      <p class="auth-link">Zaten hesabınız var mı? <a href="#" id="link-to-login">Giriş yapın</a></p>
     </div>
   </section>
 

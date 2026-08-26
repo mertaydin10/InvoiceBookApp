@@ -33,6 +33,20 @@ body {
 }
 .auth-form { max-width: none; }
 .auth-error { color: var(--danger); min-height: 1.2rem; }
+.auth-link {
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.auth-link a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.auth-link a:hover {
+  text-decoration: underline;
+}
 .top {
   display: flex;
   justify-content: space-between;
