@@ -39,6 +39,7 @@
       <button type="button" data-view="invoices">Faturalar</button>
       <button type="button" data-view="clients">Müşteriler</button>
       <button type="button" data-view="issuer">Firma</button>
+      <button type="button" data-view="profile">Profil</button>
       <button type="button" id="btn-logout">Çıkış</button>
     </nav>
   </header>
@@ -93,6 +94,27 @@
         <label class="full">Adres <textarea name="address" rows="3"></textarea></label>
         <button type="submit" class="primary">Kaydet</button>
       </form>
+    </section>
+
+    <section id="view-profile" class="view hidden">
+      <h2>Kullanıcı profili</h2>
+      <div class="profile-section">
+        <h3>Hesap bilgileri</h3>
+        <form id="profile-form" class="form">
+          <label>E-posta <input name="email" type="email" disabled /></label>
+          <label>Ad <input name="displayName" required /></label>
+          <button type="submit" class="primary">Güncelle</button>
+        </form>
+      </div>
+      <div class="profile-section">
+        <h3>Şifre değiştir</h3>
+        <form id="password-form" class="form">
+          <label>Mevcut şifre <input name="currentPassword" type="password" required /></label>
+          <label>Yeni şifre <input name="newPassword" type="password" minlength="4" required /></label>
+          <label>Yeni şifre (tekrar) <input name="confirmPassword" type="password" minlength="4" required /></label>
+          <button type="submit" class="primary">Şifreyi değiştir</button>
+        </form>
+      </div>
     </section>
 
     <section id="view-editor" class="view hidden">
