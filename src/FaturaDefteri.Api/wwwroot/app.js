@@ -146,6 +146,38 @@ document.getElementById("btn-clear-dates").addEventListener("click", () => {
   loadInvoices();
 });
 
+document.getElementById("btn-export-csv").addEventListener("click", async () => {
+  const status = document.getElementById("filter-status").value;
+  const clientId = document.getElementById("filter-client").value;
+  const fromDate = document.getElementById("filter-from-date").value;
+  const toDate = document.getElementById("filter-to-date").value;
+  const q = new URLSearchParams();
+  if (status) q.set("status", status);
+  if (clientId) q.set("clientId", clientId);
+  if (fromDate) q.set("fromDate", fromDate);
+  if (toDate) q.set("toDate", toDate);
+  const list = await api(`/api/invoices?${q}`);
+  
+  const csv = [
+    ["Fatura No", "Müşteri", "Tarih", "Vade", "Durum", "Tutar"].join(","),
+    ...list.map(i => [
+      i.number,
+      `"${i.clientName}"`,
+      i.issueDate,
+      i.dueDate,
+      statusTr(i.status, i.overdue),
+      i.gross
+    ].join(","))
+  ].join("\n");
+  
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `faturalar-${new Date().toISOString().split("T")[0]}.csv`;
+  link.click();
+  toast("CSV dosyası indirildi");
+});
+
 document.body.addEventListener("click", (e) => {
   const a = e.target.closest("[data-open]");
   if (!a) return;
