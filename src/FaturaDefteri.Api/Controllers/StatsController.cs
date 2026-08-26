@@ -44,6 +44,36 @@ public class StatsController(FaturaDbContext db) : ControllerBase
             currency));
     }
 
+    [HttpGet("monthly-revenue")]
+    public async Task<ActionResult<List<MonthlyRevenueItem>>> MonthlyRevenue(CancellationToken ct)
+    {
+        var today = DateTime.UtcNow;
+        var invoices = await db.Invoices.AsNoTracking()
+            .Include(i => i.Lines)
+            .Where(i => i.UserId == UserId && i.Status == InvoiceStatus.Paid && i.PaidAtUtc != null)
+            .ToListAsync(ct);
+
+        var months = new List<MonthlyRevenueItem>();
+        for (int i = 5; i >= 0; i--)
+        {
+            var month = today.AddMonths(-i);
+            var monthStart = new DateTime(month.Year, month.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            var monthEnd = monthStart.AddMonths(1);
+            
+            var monthInvoices = invoices
+                .Where(inv => inv.PaidAtUtc >= monthStart && inv.PaidAtUtc < monthEnd)
+                .ToList();
+            
+            months.Add(new MonthlyRevenueItem(
+                $"{month:yyyy-MM}",
+                $"{month:MMM}",
+                SumGross(monthInvoices)
+            ));
+        }
+
+        return Ok(months);
+    }
+
     private static decimal SumGross(IEnumerable<Invoice> invoices) =>
         invoices.Sum(i => Money.Totals(i.Lines).Gross);
 }
