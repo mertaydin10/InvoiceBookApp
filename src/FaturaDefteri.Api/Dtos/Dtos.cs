@@ -116,4 +116,9 @@ public record MonthlyRevenueItem(
     string Label,
     decimal Revenue);
 
+public record ActivityItem(
+    string Action,
+    string Description,
+    DateTime Timestamp);
+
 public record HealthResponse(string Status, string Database);

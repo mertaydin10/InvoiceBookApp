@@ -122,8 +122,39 @@ async function loadDashboard() {
     })
     .join("");
   
+  const activities = await api("/api/stats/recent-activities");
+  document.getElementById("recent-activities").innerHTML = activities.length
+    ? activities
+        .map(a => {
+          const date = new Date(a.timestamp);
+          const timeAgo = formatTimeAgo(date);
+          return `<div class="activity-item">
+            <div class="activity-icon ${a.action.includes('Ödeme') ? 'success' : 'info'}"></div>
+            <div class="activity-content">
+              <strong>${a.action}</strong>
+              <p class="muted">${a.description}</p>
+              <span class="activity-time">${timeAgo}</span>
+            </div>
+          </div>`;
+        })
+        .join("")
+    : "<p class='muted'>Henüz aktivite yok.</p>";
+  
   const list = await api("/api/invoices");
   renderInvoiceTable("recent-invoices", list.slice(0, 8));
+}
+
+function formatTimeAgo(date) {
+  const now = new Date();
+  const seconds = Math.floor((now - date) / 1000);
+  if (seconds < 60) return "Az önce";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} dakika önce`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} saat önce`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} gün önce`;
+  return date.toLocaleDateString("tr-TR");
 }
 
 function renderInvoiceTable(id, list) {

@@ -198,6 +198,50 @@ dialog {
   color: var(--text);
   font-weight: 500;
 }
+.activities {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+.activity-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.activity-item:last-child {
+  border-bottom: none;
+}
+.activity-icon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 0.4rem;
+  flex-shrink: 0;
+}
+.activity-icon.info {
+  background: var(--accent);
+}
+.activity-icon.success {
+  background: var(--ok);
+}
+.activity-content {
+  flex: 1;
+}
+.activity-content strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.activity-content p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+.activity-time {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
 .profile-section {
   background: var(--panel);
   border: 1px solid var(--line);

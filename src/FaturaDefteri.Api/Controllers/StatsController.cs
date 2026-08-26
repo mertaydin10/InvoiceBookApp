@@ -74,6 +74,39 @@ public class StatsController(FaturaDbContext db) : ControllerBase
         return Ok(months);
     }
 
+    [HttpGet("recent-activities")]
+    public async Task<ActionResult<List<ActivityItem>>> RecentActivities(CancellationToken ct)
+    {
+        var invoices = await db.Invoices.AsNoTracking()
+            .Include(i => i.Client)
+            .Where(i => i.UserId == UserId)
+            .OrderByDescending(i => i.CreatedAtUtc)
+            .Take(10)
+            .ToListAsync(ct);
+
+        var activities = new List<ActivityItem>();
+        
+        foreach (var inv in invoices)
+        {
+            activities.Add(new ActivityItem(
+                "Fatura oluşturuldu",
+                $"{inv.Number} - {inv.Client.Name}",
+                inv.CreatedAtUtc
+            ));
+
+            if (inv.Status == InvoiceStatus.Paid && inv.PaidAtUtc.HasValue)
+            {
+                activities.Add(new ActivityItem(
+                    "Ödeme alındı",
+                    $"{inv.Number} - {inv.Client.Name}",
+                    inv.PaidAtUtc.Value
+                ));
+            }
+        }
+
+        return Ok(activities.OrderByDescending(a => a.Timestamp).Take(8).ToList());
+    }
+
     private static decimal SumGross(IEnumerable<Invoice> invoices) =>
         invoices.Sum(i => Money.Totals(i.Lines).Gross);
 }
