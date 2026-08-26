@@ -6,15 +6,17 @@ Tek proje: `src/FaturaDefteri.Api`. Arayüz `wwwroot`.
 
 ## Ne işe yarar
 
-- **Kullanıcı yönetimi**: Kayıt, giriş, profil düzenleme, şifre değiştirme
+- **Kullanıcı yönetimi**: Ayrı giriş/kayıt sayfaları, profil düzenleme, şifre değiştirme
 - **Firma bilgisi**: Unvan, VKN, IBAN, para birimi seçimi — yazdırılan faturanın üstü
-- **Müşteri kartı**: Müşteri bilgileri, vergi numarası, iletişim
+- **Müşteri kartı**: Müşteri bilgileri, vergi numarası, iletişim, bakiye özeti
+- **Müşteri bakiye**: Her müşterinin toplam borç, ödenen ve açık tutarları
 - **Fatura**: Kalem, miktar, birim fiyat, KDV
 - **Numara**: `FAT-2026-001` formatında otomatik fatura numarası
 - **Durum**: Taslak → Gönderildi → Ödendi / İptal; vadesi geçmiş gönderilmiş fatura **gecikmiş**
+- **Arama**: Fatura numarası veya müşteri adına göre anlık arama
 - **Filtreleme**: Durum, müşteri, tarih aralığına göre fatura filtreleme
 - **CSV dışa aktarma**: Fatura listesini CSV olarak indirme
-- **Özet dashboard**: Açık tutar, gecikmiş, bu ay tahsilat, aylık gelir grafiği
+- **Özet dashboard**: Açık tutar, gecikmiş, bu ay tahsilat, aylık gelir grafiği, son aktiviteler
 - **Yazdırılabilir fatura**: Tarayıcı ile yazdırma
 - **Çoklu para birimi**: TRY, USD, EUR, GBP ve daha fazlası
 
@@ -53,6 +55,7 @@ dotnet test
 | `GET` `PUT /api/issuer` | Firma bilgileri |
 | **Müşteriler** | |
 | `GET` `POST /api/clients` | Liste, yeni müşteri |
+| `GET /api/clients/with-balances` | Bakiye özeti ile müşteri listesi |
 | `PUT` `DELETE /api/clients/{id}` | Güncelle, sil |
 | **Faturalar** | |
 | `GET /api/invoices` | Liste (filtreleme: status, clientId, fromDate, toDate) |
@@ -66,15 +69,20 @@ dotnet test
 | **İstatistikler** | |
 | `GET /api/stats/summary` | Özet (müşteri, açık fatura, gecikmiş, tahsilat) |
 | `GET /api/stats/monthly-revenue` | Son 6 ay aylık tahsilat |
+| `GET /api/stats/recent-activities` | Son aktiviteler |
 
 ## Özellikler
 
 - ✅ JWT kimlik doğrulama
+- ✅ Ayrı giriş/kayıt sayfaları
 - ✅ Kullanıcı bazlı veri izolasyonu
 - ✅ Çoklu para birimi desteği
+- ✅ Müşteri bakiye özeti
+- ✅ Fatura arama (numara/müşteri)
 - ✅ Tarih aralığı filtreleme
 - ✅ CSV dışa aktarma
 - ✅ Aylık gelir grafiği
+- ✅ Son aktiviteler dashboard
 - ✅ Kullanıcı profil yönetimi
 - ✅ Şifre değiştirme
 - ✅ Aydınlık tema
