@@ -125,15 +125,26 @@ async function loadInvoices() {
   sel.value = current;
   const status = document.getElementById("filter-status").value;
   const clientId = sel.value;
+  const fromDate = document.getElementById("filter-from-date").value;
+  const toDate = document.getElementById("filter-to-date").value;
   const q = new URLSearchParams();
   if (status) q.set("status", status);
   if (clientId) q.set("clientId", clientId);
+  if (fromDate) q.set("fromDate", fromDate);
+  if (toDate) q.set("toDate", toDate);
   const list = await api(`/api/invoices?${q}`);
   renderInvoiceTable("invoice-table", list);
 }
 
 document.getElementById("filter-status").addEventListener("change", loadInvoices);
 document.getElementById("filter-client").addEventListener("change", loadInvoices);
+document.getElementById("filter-from-date").addEventListener("change", loadInvoices);
+document.getElementById("filter-to-date").addEventListener("change", loadInvoices);
+document.getElementById("btn-clear-dates").addEventListener("click", () => {
+  document.getElementById("filter-from-date").value = "";
+  document.getElementById("filter-to-date").value = "";
+  loadInvoices();
+});
 
 document.body.addEventListener("click", (e) => {
   const a = e.target.closest("[data-open]");
