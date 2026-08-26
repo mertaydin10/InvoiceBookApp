@@ -185,12 +185,21 @@ async function loadInvoices() {
   const clientId = sel.value;
   const fromDate = document.getElementById("filter-from-date").value;
   const toDate = document.getElementById("filter-to-date").value;
+  const searchTerm = document.getElementById("invoice-search").value.toLowerCase().trim();
   const q = new URLSearchParams();
   if (status) q.set("status", status);
   if (clientId) q.set("clientId", clientId);
   if (fromDate) q.set("fromDate", fromDate);
   if (toDate) q.set("toDate", toDate);
-  const list = await api(`/api/invoices?${q}`);
+  let list = await api(`/api/invoices?${q}`);
+  
+  if (searchTerm) {
+    list = list.filter(i => 
+      i.number.toLowerCase().includes(searchTerm) || 
+      i.clientName.toLowerCase().includes(searchTerm)
+    );
+  }
+  
   renderInvoiceTable("invoice-table", list);
 }
 
@@ -198,6 +207,7 @@ document.getElementById("filter-status").addEventListener("change", loadInvoices
 document.getElementById("filter-client").addEventListener("change", loadInvoices);
 document.getElementById("filter-from-date").addEventListener("change", loadInvoices);
 document.getElementById("filter-to-date").addEventListener("change", loadInvoices);
+document.getElementById("invoice-search").addEventListener("input", loadInvoices);
 document.getElementById("btn-clear-dates").addEventListener("click", () => {
   document.getElementById("filter-from-date").value = "";
   document.getElementById("filter-to-date").value = "";
