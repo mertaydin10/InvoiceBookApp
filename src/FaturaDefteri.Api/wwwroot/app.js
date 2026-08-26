@@ -75,6 +75,7 @@ document.querySelector("nav").addEventListener("click", (e) => {
   if (btn.dataset.view === "invoices") loadInvoices();
   if (btn.dataset.view === "clients") loadClients();
   if (btn.dataset.view === "issuer") loadIssuer();
+  if (btn.dataset.view === "profile") loadProfile();
 });
 
 function table(headers, rowsHtml) {
@@ -453,6 +454,53 @@ document.getElementById("btn-print").addEventListener("click", async () => {
   w.document.close();
   w.focus();
   w.print();
+});
+
+async function loadProfile() {
+  try {
+    const user = await api("/api/auth/me");
+    const f = document.getElementById("profile-form");
+    f.email.value = user.email;
+    f.displayName.value = user.displayName;
+  } catch (err) {
+    toast(err.message);
+  }
+}
+
+document.getElementById("profile-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  try {
+    await api("/api/auth/me", {
+      method: "PUT",
+      body: JSON.stringify({ displayName: f.displayName.value }),
+    });
+    toast("Profil güncellendi");
+  } catch (err) {
+    toast(err.message);
+  }
+});
+
+document.getElementById("password-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  if (f.newPassword.value !== f.confirmPassword.value) {
+    toast("Yeni şifreler eşleşmiyor");
+    return;
+  }
+  try {
+    await api("/api/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({
+        currentPassword: f.currentPassword.value,
+        newPassword: f.newPassword.value,
+      }),
+    });
+    toast("Şifre değiştirildi");
+    f.reset();
+  } catch (err) {
+    toast(err.message);
+  }
 });
 
 async function enterApp() {
