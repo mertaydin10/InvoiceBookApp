@@ -20,6 +20,8 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
     public async Task<ActionResult<List<InvoiceListItem>>> List(
         [FromQuery] string? status,
         [FromQuery] long? clientId,
+        [FromQuery] DateOnly? fromDate,
+        [FromQuery] DateOnly? toDate,
         CancellationToken ct)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -29,6 +31,10 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
             query = query.Where(i => i.ClientId == clientId);
         if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<InvoiceStatus>(status, true, out var parsed))
             query = query.Where(i => i.Status == parsed);
+        if (fromDate is not null)
+            query = query.Where(i => i.IssueDate >= fromDate);
+        if (toDate is not null)
+            query = query.Where(i => i.IssueDate <= toDate);
 
         var rows = await query.OrderByDescending(i => i.IssueDate).ThenByDescending(i => i.Id).ToListAsync(ct);
         if (string.Equals(status, "overdue", StringComparison.OrdinalIgnoreCase))
