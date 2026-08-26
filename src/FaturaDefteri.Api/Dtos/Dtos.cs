@@ -100,4 +100,9 @@ public record SummaryResponse(
     decimal PaidThisMonthGross,
     string Currency);
 
+public record MonthlyRevenueItem(
+    string Month,
+    string Label,
+    decimal Revenue);
+
 public record HealthResponse(string Status, string Database);
