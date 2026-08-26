@@ -70,6 +70,49 @@ public class AuthController(
         return Ok(new MeResponse(user.Id, user.Email, user.DisplayName));
     }
 
+    [Authorize]
+    [HttpPut("me")]
+    public async Task<ActionResult> UpdateProfile(UpdateProfileRequest request, CancellationToken ct)
+    {
+        var id = User.GetRequiredUserId();
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
+        if (user is null)
+            return Unauthorized();
+
+        if (!string.IsNullOrWhiteSpace(request.DisplayName))
+        {
+            user.DisplayName = request.DisplayName.Trim();
+            await db.SaveChangesAsync(ct);
+        }
+
+        return Ok(new MeResponse(user.Id, user.Email, user.DisplayName));
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<ActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken ct)
+    {
+        var id = User.GetRequiredUserId();
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
+        if (user is null)
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+            return BadRequest(new { error = "Mevcut şifre ve yeni şifre gerekli." });
+
+        var result = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.CurrentPassword);
+        if (result == PasswordVerificationResult.Failed)
+            return BadRequest(new { error = "Mevcut şifre yanlış." });
+
+        if (request.NewPassword.Length < 4)
+            return BadRequest(new { error = "Yeni şifre en az 4 karakter olmalı." });
+
+        user.PasswordHash = passwordHasher.HashPassword(user, request.NewPassword);
+        await db.SaveChangesAsync(ct);
+
+        return Ok(new { message = "Şifre başarıyla değiştirildi." });
+    }
+
     private LoginResponse Issue(User user)
     {
         var key = configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key eksik.");
@@ -93,3 +136,5 @@ public record RegisterRequest(string Email, string Password, string? DisplayName
 public record LoginRequest(string Email, string Password);
 public record LoginResponse(string Token, DateTimeOffset ExpiresAt, string DisplayName);
 public record MeResponse(long Id, string Email, string DisplayName);
+public record UpdateProfileRequest(string DisplayName);
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
