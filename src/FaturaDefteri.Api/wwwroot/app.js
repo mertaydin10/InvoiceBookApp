@@ -95,6 +95,20 @@ async function loadDashboard() {
   ]
     .map(([k, v]) => `<article class="card"><span class="muted">${k}</span><strong>${v}</strong></article>`)
     .join("");
+  
+  const monthlyData = await api("/api/stats/monthly-revenue");
+  const maxRevenue = Math.max(...monthlyData.map(m => m.revenue), 1);
+  document.getElementById("monthly-chart").innerHTML = monthlyData
+    .map(m => {
+      const height = (m.revenue / maxRevenue) * 100;
+      return `<div class="chart-bar">
+        <div class="bar" style="height: ${height}%"></div>
+        <div class="bar-label">${m.label}</div>
+        <div class="bar-value">${money(m.revenue, currency)}</div>
+      </div>`;
+    })
+    .join("");
+  
   const list = await api("/api/invoices");
   renderInvoiceTable("recent-invoices", list.slice(0, 8));
 }
