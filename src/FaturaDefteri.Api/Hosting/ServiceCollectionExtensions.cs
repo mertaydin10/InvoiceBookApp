@@ -13,22 +13,18 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddFaturaDefteri(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
-        // Database
         var dataDir = Path.Combine(environment.ContentRootPath, "data");
         Directory.CreateDirectory(dataDir);
         var connection = configuration.GetConnectionString("Sqlite") ?? "Data Source=data/fatura.db";
         services.AddDbContext<FaturaDbContext>(o => o.UseSqlite(connection));
 
-        // Services
         services.AddScoped<InvoiceNumberer>();
         services.AddSingleton<PasswordHasher<User>>();
 
-        // Controllers & API
         services.AddControllers();
         services.AddOpenApi();
         services.AddEndpointsApiExplorer();
 
-        // JWT Authentication
         var jwtKey = configuration["Jwt:Key"] ?? "fatura-defteri-dev-key-min-32-characters!";
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(o =>

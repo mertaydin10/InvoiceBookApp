@@ -45,7 +45,6 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
 
         var mapped = rows.Select(i => MapList(i, today)).ToList();
         
-        // If pagination is requested, return paginated result
         if (page.HasValue && pageSize.HasValue)
         {
             var p = page.Value < 1 ? 1 : page.Value;
@@ -53,7 +52,6 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
             return Ok(mapped.ToPaginatedResult(p, ps));
         }
         
-        // Otherwise return full list (backward compatible)
         return Ok(mapped);
     }
 

@@ -17,7 +17,6 @@ public static class WebApplicationExtensions
         }
         catch
         {
-            // If Users table doesn't exist, recreate the database
             await db.Database.EnsureDeletedAsync();
             await db.Database.EnsureCreatedAsync();
         }
@@ -27,25 +26,20 @@ public static class WebApplicationExtensions
 
     public static WebApplication ConfigureFaturaDefteri(this WebApplication app)
     {
-        // Swagger (Development only)
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
             app.UseSwaggerUI(o => o.SwaggerEndpoint("/openapi/v1.json", "FaturaDefteri"));
         }
 
-        // Static files & SPA
         app.UseDefaultFiles();
         app.UseStaticFiles();
 
-        // Authentication & Authorization
         app.UseAuthentication();
         app.UseAuthorization();
 
-        // API Controllers
         app.MapControllers();
 
-        // Fallback to index.html for SPA
         app.MapFallbackToFile("index.html");
 
         return app;
