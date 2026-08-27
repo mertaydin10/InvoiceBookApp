@@ -58,7 +58,7 @@ dotnet test
 | `GET /api/clients/with-balances` | Bakiye özeti ile müşteri listesi |
 | `PUT` `DELETE /api/clients/{id}` | Güncelle, sil |
 | **Faturalar** | |
-| `GET /api/invoices` | Liste (filtreleme: status, clientId, fromDate, toDate) |
+| `GET /api/invoices` | Liste (filtreleme: status, clientId, fromDate, toDate, page, pageSize) |
 | `POST /api/invoices` | Yeni fatura (taslak) |
 | `GET /api/invoices/{id}` | Detay |
 | `PUT /api/invoices/{id}` | Güncelle (taslak/gönderildi) |
@@ -75,9 +75,11 @@ dotnet test
 
 - ✅ JWT kimlik doğrulama
 - ✅ Ayrı giriş/kayıt sayfaları
+- ✅ Gelişmiş input validasyonu (email, telefon, IBAN, vergi no)
 - ✅ Kullanıcı bazlı veri izolasyonu
 - ✅ Çoklu para birimi desteği
 - ✅ Müşteri bakiye özeti
+- ✅ Fatura sayfalama (pagination) desteği
 - ✅ Fatura arama (numara/müşteri)
 - ✅ Tarih aralığı filtreleme
 - ✅ CSV dışa aktarma
