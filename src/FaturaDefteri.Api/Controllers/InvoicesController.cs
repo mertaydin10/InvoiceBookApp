@@ -2,6 +2,7 @@ using FaturaDefteri.Api.Auth;
 using FaturaDefteri.Api.Data;
 using FaturaDefteri.Api.Dtos;
 using FaturaDefteri.Api.Entities;
+using FaturaDefteri.Api.Helpers;
 using FaturaDefteri.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,11 +18,13 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
     private long UserId => User.GetRequiredUserId();
 
     [HttpGet]
-    public async Task<ActionResult<List<InvoiceListItem>>> List(
+    public async Task<ActionResult<object>> List(
         [FromQuery] string? status,
         [FromQuery] long? clientId,
         [FromQuery] DateOnly? fromDate,
         [FromQuery] DateOnly? toDate,
+        [FromQuery] int? page,
+        [FromQuery] int? pageSize,
         CancellationToken ct)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -40,7 +43,18 @@ public class InvoicesController(FaturaDbContext db, InvoiceNumberer numbers) : C
         if (string.Equals(status, "overdue", StringComparison.OrdinalIgnoreCase))
             rows = rows.Where(i => i.Status == InvoiceStatus.Sent && i.DueDate < today).ToList();
 
-        return Ok(rows.Select(i => MapList(i, today)).ToList());
+        var mapped = rows.Select(i => MapList(i, today)).ToList();
+        
+        // If pagination is requested, return paginated result
+        if (page.HasValue && pageSize.HasValue)
+        {
+            var p = page.Value < 1 ? 1 : page.Value;
+            var ps = pageSize.Value < 1 ? 10 : (pageSize.Value > 100 ? 100 : pageSize.Value);
+            return Ok(mapped.ToPaginatedResult(p, ps));
+        }
+        
+        // Otherwise return full list (backward compatible)
+        return Ok(mapped);
     }
 
     [HttpGet("{id:long}")]

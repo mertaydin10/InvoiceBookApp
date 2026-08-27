@@ -4,6 +4,7 @@ using System.Text;
 using FaturaDefteri.Api.Auth;
 using FaturaDefteri.Api.Data;
 using FaturaDefteri.Api.Entities;
+using FaturaDefteri.Api.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -26,8 +27,12 @@ public class AuthController(
         var email = request.Email.Trim().ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(request.Password))
             return BadRequest(new { error = "E-posta ve şifre gerekli." });
+        if (!ValidationHelper.IsValidEmail(email))
+            return BadRequest(new { error = "Geçerli bir e-posta adresi girin." });
         if (request.Password.Length < 4)
             return BadRequest(new { error = "Şifre en az 4 karakter olmalı." });
+        if (string.IsNullOrWhiteSpace(request.DisplayName))
+            return BadRequest(new { error = "Ad gerekli." });
         if (await db.Users.AnyAsync(u => u.Email == email, ct))
             return Conflict(new { error = "Bu e-posta zaten kayıtlı." });
 

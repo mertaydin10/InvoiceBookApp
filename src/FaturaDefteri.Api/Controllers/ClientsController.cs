@@ -2,6 +2,7 @@ using FaturaDefteri.Api.Auth;
 using FaturaDefteri.Api.Data;
 using FaturaDefteri.Api.Dtos;
 using FaturaDefteri.Api.Entities;
+using FaturaDefteri.Api.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -74,6 +75,12 @@ public class ClientsController(FaturaDbContext db) : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(request.Name))
             return BadRequest(new { error = "Müşteri adı gerekli." });
+        if (!string.IsNullOrWhiteSpace(request.Email) && !ValidationHelper.IsValidEmail(request.Email))
+            return BadRequest(new { error = "Geçerli bir e-posta adresi girin." });
+        if (!string.IsNullOrWhiteSpace(request.Phone) && !ValidationHelper.IsValidPhone(request.Phone))
+            return BadRequest(new { error = "Geçerli bir telefon numarası girin." });
+        if (!string.IsNullOrWhiteSpace(request.TaxNumber) && !ValidationHelper.IsValidTaxNumber(request.TaxNumber))
+            return BadRequest(new { error = "Vergi numarası 10 veya 11 haneli olmalı." });
 
         var row = new Client
         {
@@ -95,6 +102,12 @@ public class ClientsController(FaturaDbContext db) : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(request.Name))
             return BadRequest(new { error = "Müşteri adı gerekli." });
+        if (!string.IsNullOrWhiteSpace(request.Email) && !ValidationHelper.IsValidEmail(request.Email))
+            return BadRequest(new { error = "Geçerli bir e-posta adresi girin." });
+        if (!string.IsNullOrWhiteSpace(request.Phone) && !ValidationHelper.IsValidPhone(request.Phone))
+            return BadRequest(new { error = "Geçerli bir telefon numarası girin." });
+        if (!string.IsNullOrWhiteSpace(request.TaxNumber) && !ValidationHelper.IsValidTaxNumber(request.TaxNumber))
+            return BadRequest(new { error = "Vergi numarası 10 veya 11 haneli olmalı." });
 
         var row = await db.Clients.FirstOrDefaultAsync(c => c.Id == id && c.UserId == UserId, ct);
         if (row is null)

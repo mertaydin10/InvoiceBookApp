@@ -2,6 +2,7 @@ using FaturaDefteri.Api.Auth;
 using FaturaDefteri.Api.Data;
 using FaturaDefteri.Api.Dtos;
 using FaturaDefteri.Api.Entities;
+using FaturaDefteri.Api.Helpers;
 using FaturaDefteri.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,6 +33,14 @@ public class IssuerController(FaturaDbContext db) : ControllerBase
             return BadRequest(new { error = "Unvan gerekli." });
         if (!Currencies.IsSupported(request.Currency))
             return BadRequest(new { error = "Para birimi listeden seçilmeli." });
+        if (!string.IsNullOrWhiteSpace(request.Email) && !ValidationHelper.IsValidEmail(request.Email))
+            return BadRequest(new { error = "Geçerli bir e-posta adresi girin." });
+        if (!string.IsNullOrWhiteSpace(request.Phone) && !ValidationHelper.IsValidPhone(request.Phone))
+            return BadRequest(new { error = "Geçerli bir telefon numarası girin." });
+        if (!string.IsNullOrWhiteSpace(request.TaxNumber) && !ValidationHelper.IsValidTaxNumber(request.TaxNumber))
+            return BadRequest(new { error = "Vergi numarası 10 veya 11 haneli olmalı." });
+        if (!string.IsNullOrWhiteSpace(request.Iban) && !ValidationHelper.IsValidIban(request.Iban))
+            return BadRequest(new { error = "Geçerli bir TR IBAN girin." });
 
         var row = await db.IssuerProfiles.FirstOrDefaultAsync(x => x.UserId == UserId, ct);
         if (row is null)
